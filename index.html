@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Signal Processing</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h2, h3 { color: #333; }
+        .code-block { background-color: #f4f4f4; font-size: 22px; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+        .experiment { margin-bottom: 30px; }
+        h2{
+            background-color: rgb(255, 255, 117);
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Digital Signal Processing Experiments</h1>
+
+<div class="experiment">
+    <h2>Experiment 11: To Plot Frequency Response of LPF using Kaiser Window for Different Parameters</h2>
+    <div class="code-block">
+        clear all;<br>
+        close all;<br>
+        clc;<br><br>
+        % Specifications<br>
+        alphap = 0.01; % Passband ripple in dB<br>
+        alphas = 44; % Stopband attenuation in dB<br>
+        ws = 30; % Stopband edge frequency in rad/sec<br>
+        wp = 20; % Passband edge frequency in rad/sec<br>
+        fs = 100; % Sampling frequency in Hz<br><br>
+
+        % Calculation of parameters<br>
+        B = ws - wp; % Transition bandwidth<br>
+        wc = 0.5 * (ws + wp); % Cutoff frequency in rad/sec<br>
+        wcr = wc / (fs / 2); % Normalized cutoff frequency (0 to 1)<br><br>
+
+        % Kaiser window parameters<br>
+        D = (alphas - 7.95) / 14.36; % Kaiser parameter D<br>
+        N = ceil((fs * D / B) + 1); % Filter order<br>
+        beta = 0.5842 * (alphas - 21)^0.4 + 0.07886 * (alphas - 21); % Kaiser beta<br>
+        alpha = (N - 1) / 2; % Midpoint of the filter<br><br>
+
+        % Impulse response of the ideal low-pass filter<br>
+        n = 0:1:N-1;<br>
+        a1 = sin(wcr * pi * (n - alpha));<br>
+        a2 = pi * (n - alpha);<br>
+        hd = a1 ./ a2;<br>
+        hd(alpha + 1) = wcr; % Handling division by zero at n = alpha<br><br>
+
+        % Kaiser window<br>
+        wk = kaiser(N, beta)'; % Kaiser window of length N<br><br>
+
+        % FIR filter coefficients<br>
+        hn = hd .* wk;<br><br>
+
+        % Frequency response<br>
+        w = 0:0.01:pi;<br>
+        h = freqz(hn, 1, w);<br><br>
+
+        % Plotting the frequency response<br>
+        figure;<br>
+        plot(w / pi, 20 * log10(abs(h)));<br>
+        xlabel('Normalized Frequency (\\omega/\\pi)');<br>
+        ylabel('Magnitude (dB)');<br>
+        title('Frequency Response of FIR Low-Pass Filter using Kaiser Window');<br>
+        grid on;<br><br>
+
+        % Plotting impulse response<br>
+        figure;<br>
+        stem(n, hn);<br>
+        xlabel('Sample Index (n)');<br>
+        ylabel('Amplitude');<br>
+        title('Impulse Response of the FIR Filter');<br>
+        grid on;
+    </div>
+</div>
+
+<div class="experiment">
+    <h2>Exp 10: Design of FIR Filter using Kaiser Window</h2>
+    <div class="code-block">
+        clear all; % Corrected command<br>
+        close all;<br>
+        clc;<br><br>
+        % Specifications<br>
+        alphap = 0.01; % Passband ripple in dB<br>
+        alphas = 44; % Stopband attenuation in dB<br>
+        ws = 30; % Stopband edge frequency in rad/sec<br>
+        wp = 20; % Passband edge frequency in rad/sec<br>
+        wfs = 100; % Sampling frequency in Hz (corrected to Hz)<br><br>
+
+        % Calculation of parameters<br>
+        B = ws - wp; % Transition bandwidth<br>
+        wc = 0.5 * (ws + wp); % Cutoff frequency in rad/sec<br>
+        wcr = wc / (wfs / 2); % Normalized cutoff frequency (0 to 1)<br><br>
+
+        % Kaiser window parameters<br>
+        D = (alphas - 7.95) / 14.36; % Kaiser parameter D<br>
+        N = ceil((wfs * D / B) + 1); % Filter order<br>
+        beta = 0.5842 * (alphas - 21)^0.4 + 0.07886 * (alphas - 21); % Kaiser beta<br>
+        alpha = (N - 1) / 2; % Midpoint of the filter<br><br>
+
+        % Impulse response of the ideal low-pass filter (sinc function)<br>
+        n = 0:1:N-1;<br>
+        a1 = sin(wcr * pi * (n - alpha)); % Adjusted to include pi<br>
+        a2 = pi * (n - alpha);<br>
+        hd = a1 ./ a2; % Ideal low-pass filter response<br>
+        hd(alpha + 1) = wcr; % Avoid division by zero at n = alpha<br><br>
+
+        % Kaiser window<br>
+        wk = kaiser(N, beta)'; % Kaiser window of length N<br><br>
+
+        % FIR filter coefficients<br>
+        hn = hd .* wk; % Apply Kaiser window to the ideal response<br><br>
+
+        % Frequency response<br>
+        w = 0:0.01:pi; % Frequency range for plot<br>
+        h = freqz(hn, 1, w); % Compute frequency response<br><br>
+
+        % Plot the frequency response<br>
+        figure;<br>
+        plot(w / pi, 20 * log10(abs(h))); % Normalize frequency<br>
+        xlabel('Normalized Frequency (\\omega/\\pi)');<br>
+        ylabel('Magnitude (dB)');<br>
+        title('Frequency Response of FIR Low-Pass Filter using Kaiser Window');<br>
+        grid on;
+    </div>
+</div>
+
+<div class="experiment">
+    <h2>Exp 9: Design of FIR Filter using Different Window Functions</h2>
+    <div class="code-block">
+        clear all;<br>
+        close all;<br>
+        clc;<br><br>
+        % Specifications<br>
+        wc = 0.5 * pi; % Cutoff frequency (0.5 * pi radian)<br>
+        N = 25; % Filter length<br>
+        alpha = (N - 1) / 2; % Midpoint of the filter<br>
+        eps = 1e-6; % Small value to avoid division by zero<br><br>
+
+        % Ideal low-pass filter (sinc function)<br>
+        n = 0:1:N-1;<br>
+        hd1 = sin(wc * (n - alpha + eps)); % Ideal impulse response numerator<br>
+        hd2 = pi * (n - alpha + eps); % Ideal impulse response denominator<br>
+        hd = hd1 ./ hd2; % Ideal low-pass filter response<br><br>
+
+        % Rectangular window (Boxcar)<br>
+        wr = rectwin(N); % Rectangular window<br>
+        hn = hd .* wr'; % Filter coefficients for Rectangular window<br><br>
+
+        % Frequency response of Rectangular window filter<br>
+        w = 0:0.01:pi;<br>
+        h = freqz(hn, 1, w);<br>
+        plot(w/pi, abs(h), 'b'); % Plot in blue<br>
+        hold on;<br><br>
+
+        % Hamming window<br>
+        wh = hamming(N); % Hamming window<br>
+        hn = hd .* wh'; % Filter coefficients for Hamming window<br><br>
+
+        % Frequency response of Hamming window filter<br>
+        h = freqz(hn, 1, w);<br>
+        plot(w/pi, abs(h), 'r.'); % Plot in red<br><br>
+
+        % Blackman window<br>
+        wb = blackman(N); % Blackman window<br>
+        hn = hd .* wb'; % Filter coefficients for Blackman window<br><br>
+
+        % Frequency response of Blackman window filter<br>
+        h = freqz(hn, 1, w);<br>
+        plot(w/pi, abs(h), 'g-.'); % Plot in green<br><br>
+
+        % Adding labels and legend<br>
+        legend('Rectangular Window', 'Hamming Window', 'Blackman Window');<br>
+        xlabel('Normalized Frequency (\\omega/\\pi)');<br>
+        ylabel('Magnitude');<br>
+        grid on;<br>
+        hold off;
+    </div>
+</div>
+
+<div class="experiment">
+    <h2>Exp 8: Design of Simple Filter</h2>
+    <div class="code-block">
+        clear all;<br>
+        close all;<br>
+        clc;<br><br>
+        % Specifications<br>
+        wc = 0.5 * pi; % Cutoff frequency (0.5 * pi radian)<br>
+        N = 25; % Filter length<br>
+        alpha = (N - 1) / 2; % Midpoint of the filter<br>
+        eps = 1e-6; % Small value to avoid division by zero<br><br>
+
+        % Ideal low-pass filter (sinc function)<br>
+        n = 0:1:N-1;<br>
+        hd1 = sin(wc * (n - alpha + eps)); % Ideal impulse response numerator<br>
+        hd2 = pi * (n - alpha + eps); % Ideal impulse response denominator<br>
+        hd = hd1 ./ hd2; % Ideal low-pass filter response<br><br>
+
+        % Rectangular window (Boxcar)<br>
+        wr = rectwin(N); % Rectangular window<br>
+        hn = hd .* wr'; % Filter coefficients for Rectangular window<br><br>
+
+        % Frequency response of Rectangular window filter<br>
+        w = 0:0.01:pi;<br>
+        h = freqz(hn, 1, w);<br>
+        plot(w/pi, abs(h), 'b'); % Plot in blue<br>
+        hold on;<br><br>
+
+        % Hamming window<br>
+        wh = hamming(N); % Hamming window<br>
+        hn = hd .* wh'; % Filter coefficients for Hamming window<br><br>
+
+        % Frequency response of Hamming window filter<br>
+        h = freqz(hn, 1, w);<br>
+        plot(w/pi, abs(h), 'r.'); % Plot in red<br><br>
+
+        % Blackman window<br>
+        wb = blackman(N); % Blackman window<br>
+        hn = hd .* wb'; % Filter coefficients for Blackman window<br><br>
+
+        % Frequency response of Blackman window filter<br>
+        h = freqz(hn, 1, w);<br>
+        plot(w/pi, abs(h), 'g-.'); % Plot in green<br><br>
+
+        % Adding labels and legend<br>
+        legend('Rectangular Window', 'Hamming Window', 'Blackman Window');<br>
+        xlabel('Normalized Frequency (\\omega/\\pi)');<br>
+        ylabel('Magnitude');<br>
+        grid on;<br>
+        hold off;
+    </div>
+</div>
+
+<div class="experiment">
+    <h2>Exp 7: Illustration of Overlap and Add</h2>
+    <div class="code-block">
+        clear all;<br>
+        close all;<br><br>
+
+        % Generate the noise sequence<br>
+        R = 64;<br>
+        d = rand(R,1) - 0.5; % Uniform noise sequence<br><br>
+
+        % Generate the uncorrupted sequence and add noise<br>
+        k = 0:R-1;<br>
+        s = 2 * k .* (0.9 .^ k); % Original signal<br>
+        x = s + d'; % Noisy signal by adding noise to the original signal<br><br>
+
+        % Read in the length of the moving average filter<br>
+        M = input('Length of moving average filter = ');<br><br>
+
+        % Generate the moving average filter coefficients<br>
+        h = ones(1, M) / M; % Moving average filter (FIR filter)<br><br>
+
+        % Perform the overlap-add filtering operation using FFT<br>
+        y = fftfilt(h, x, 4); % Apply the FIR filter using FFT (Overlap-Add)<br><br>
+
+        % Plot the results<br>
+        plot(k, s, 'r-', k, y, 'b--') % Plot original and filtered signals<br>
+        xlabel('Time index n');<br>
+        ylabel('Amplitude');<br>
+        legend('s[n]', 'y[n]');<br>
+        grid on;
+    </div>
+</div>
+
+</body>
+</html>
